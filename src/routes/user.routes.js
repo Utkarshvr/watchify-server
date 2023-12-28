@@ -4,11 +4,13 @@ const upload = require("../middlewares/multer.middlewares");
 const {
   customizeUser,
   getUserById,
+  getVideosByUser,
 } = require("../controllers/user.controller");
 
 const userRouter = express.Router();
 
 userRouter.get("/:id", getUserById);
+userRouter.get("/:id/videos", getVideosByUser);
 
 userRouter.post(
   "/:id/customize",

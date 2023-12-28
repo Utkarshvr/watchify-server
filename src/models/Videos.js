@@ -14,14 +14,23 @@ const videoSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    thumbnail: {
+    videoID: {
       type: String,
       required: true,
+    },
+    thumbnail: {
+      type: String,
+      required: false,
     },
     creator: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    playlist: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Playlist",
+      required: false,
     },
     likes: {
       type: Array,
@@ -30,6 +39,10 @@ const videoSchema = new mongoose.Schema(
     numComments: {
       type: Number,
       default: 0,
+    },
+    isPublic: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }
