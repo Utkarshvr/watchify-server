@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    banner_image: {
+      type: String,
+      required: false,
+    },
     email: {
       type: String,
       required: true,
@@ -32,6 +36,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    links: {
+      type: Array,
+      required: false,
     },
   },
   { timestamps: true }
