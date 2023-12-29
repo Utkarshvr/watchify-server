@@ -76,6 +76,9 @@ const getVideosByUser = asyncHandler(async (req, res) => {
     isPublic: true,
     creator: req.params.id,
   })
+    .sort({
+      createdAt: -1,
+    })
     .populate("creator")
     .lean();
 
