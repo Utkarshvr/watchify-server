@@ -73,7 +73,6 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const getVideosByUser = asyncHandler(async (req, res) => {
   const videos = await Videos.find({
-    isPublic: true,
     creator: req.params.id,
   })
     .sort({

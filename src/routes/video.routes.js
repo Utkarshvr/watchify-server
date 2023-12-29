@@ -9,9 +9,9 @@ const {
 
 const videoRouter = express.Router();
 
-videoRouter.get("/:id", getVideoById);
-
 videoRouter.get("/all", getAllVideos);
+
+videoRouter.get("/:id", getVideoById);
 
 videoRouter.post(
   "/create",
