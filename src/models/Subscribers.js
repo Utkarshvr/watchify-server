@@ -1,25 +1,21 @@
 const { Schema, model } = require("mongoose");
 
-const commentSchema = new Schema(
+const subscriberschema = new Schema(
   {
-    videoID: {
-      type: Schema.Types.ObjectId,
-      ref: "Video",
-      required: true,
-    },
-    user: {
+    subscriber: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    comment: {
-      type: String,
+    channel: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
   },
   { timestamps: true }
 );
 
-const Comments = model("Comment", commentSchema);
+const Subscribers = model("subscribers", subscriberschema);
 
-module.exports = Comments;
+module.exports = Subscribers;

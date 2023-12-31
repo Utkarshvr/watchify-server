@@ -4,6 +4,7 @@ const uploadRoute = require("./upload.routes.js");
 const roughRouter = require("./rough.routes.js");
 const userRouter = require("./user.routes.js");
 const videoRouter = require("./video.routes.js");
+const subscriberRouter = require("./subscribe.routes.js");
 
 const rootRoute = express.Router();
 
@@ -14,6 +15,8 @@ rootRoute.use("/upload", uploadRoute);
 rootRoute.use("/user", userRouter);
 
 rootRoute.use("/video", videoRouter);
+
+rootRoute.use("/subscribe", subscriberRouter);
 
 rootRoute.use("/rough", roughRouter);
 
