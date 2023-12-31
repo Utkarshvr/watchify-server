@@ -5,13 +5,13 @@ const generateUniqueChannelID = require("../helpers/generateChannelID");
 
 const login = asyncHandler(async (req, res) => {
   if (req.user) {
-    console.log(req.user);
+    // console.log(req.user);
     // 1. Extract email & all other necessary fields
     const { email, given_name, family_name, name, picture } = req.user._json;
-    // console.log("detials", { email, given_name, family_name, name, picture });
+    // // console.log("detials", { email, given_name, family_name, name, picture });
 
     const userByEmail = await User.findOne({ email });
-    console.log("Existing User: ", !!userByEmail, userByEmail);
+    // console.log("Existing User: ", !!userByEmail, userByEmail);
 
     // 2. if email already exists in the DB. Return it & it's done
     if (userByEmail) {
@@ -57,8 +57,8 @@ const login = asyncHandler(async (req, res) => {
         isChannelIDUnique = true;
       }
     }
-    console.log("Is Handler Unique", isUserHandleUnique);
-    console.log("Is Channel ID Unique", isChannelIDUnique);
+    // console.log("Is Handler Unique", isUserHandleUnique);
+    // console.log("Is Channel ID Unique", isChannelIDUnique);
 
     // (c) Create a new user
     const userObj = {
@@ -72,7 +72,7 @@ const login = asyncHandler(async (req, res) => {
     };
 
     let newUser = await User.create(userObj);
-    console.log("New User: ", newUser);
+    // console.log("New User: ", newUser);
     req.user.details = newUser;
 
     return res.status(201).json({

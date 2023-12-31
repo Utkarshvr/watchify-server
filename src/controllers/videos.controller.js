@@ -2,6 +2,9 @@ const asyncHandler = require("express-async-handler");
 const Videos = require("../models/Videos");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
 const { generateVideoId } = require("../helpers/utility");
+const {
+  Types: { ObjectId },
+} = require("mongoose");
 
 const createVideo = asyncHandler(async (req, res) => {
   // Your code for the CreateVideo function goes here
@@ -44,25 +47,100 @@ const createVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
   const videoID = req.params.id;
+  const userID = req.user?.details?._id;
 
-  const video = await Videos.findOne({ isPublic: true, videoID })
-    .populate("creator")
-    .lean();
+  const video = await Videos.aggregate([
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "creator",
+        foreignField: "_id",
+        as: "creator",
+      },
+    },
+    {
+      $addFields: {
+        likes_count: { $size: "$likes" },
+        isLiked: {
+          $cond: {
+            if: {
+              $in: [new ObjectId(userID), "$likes.likedBy"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        creator: {
+          $first: "$creator",
+        },
+      },
+    },
+    {
+      $match: {
+        // _id: new ObjectId("658d6fd765b6e96cfd215d55"),
+        videoID,
+      },
+    },
+  ]);
 
   res.status(200).json({
-    video,
+    video: video[0],
   });
 });
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const videos = await Videos.find({ isPublic: true })
-    .sort({
-      createdAt: -1,
-    })
-    .populate("creator")
-    .lean();
+  // const videos = await Videos.find({ isPublic: true })
+  //   .sort({
+  //     createdAt: -1,
+  //   })
+  //   .populate("creator")
+  //   .lean();
+  const userID = req.user?.details?._id;
 
-  console.log(videos);
+  const videos = await Videos.aggregate([
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "creator",
+        foreignField: "_id",
+        as: "creator",
+      },
+    },
+    {
+      $addFields: {
+        likes_count: { $size: "$likes" },
+        isLiked: {
+          $cond: {
+            if: {
+              $in: [new ObjectId(userID), "$likes.likedBy"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        creator: {
+          $first: "$creator",
+        },
+      },
+    },
+  ]).sort({ createdAt: -1 });
+
   res.status(200).json({
     videos,
   });
