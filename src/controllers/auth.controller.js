@@ -14,14 +14,16 @@ const login = asyncHandler(async (req, res) => {
     console.log("Existing User: ", !!userByEmail, userByEmail);
 
     // 2. if email already exists in the DB. Return it & it's done
-    if (userByEmail)
+    if (userByEmail) {
+      req.user.details = userByEmail;
+
       return res.status(200).json({
         error: false,
         message: "Successfully Logged In",
         // user: req.user,
         user: userByEmail,
       });
-
+    }
     let isUserHandleUnique = false;
     let isChannelIDUnique = false;
     let userHandle;
@@ -71,6 +73,7 @@ const login = asyncHandler(async (req, res) => {
 
     let newUser = await User.create(userObj);
     console.log("New User: ", newUser);
+    req.user.details = newUser;
 
     return res.status(201).json({
       error: false,
