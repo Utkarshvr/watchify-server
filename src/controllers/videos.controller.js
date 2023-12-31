@@ -43,12 +43,18 @@ const createVideo = asyncHandler(async (req, res) => {
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
-  // Your code for the CreateVideo function goes here
+  const videoID = req.params.id;
+
+  const video = await Videos.findOne({ isPublic: true, videoID })
+    .populate("creator")
+    .lean();
+
+  res.status(200).json({
+    video,
+  });
 });
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  console.log("HI");
-
   const videos = await Videos.find({ isPublic: true })
     .sort({
       createdAt: -1,

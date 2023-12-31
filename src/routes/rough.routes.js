@@ -22,4 +22,10 @@ roughRouter.post(
   }
 );
 
+roughRouter.post("/aggregate", async (req, res) => {
+
+
+  
+});
+
 module.exports = roughRouter;
