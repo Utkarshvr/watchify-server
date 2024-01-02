@@ -164,10 +164,152 @@ const toggleVideoInPlaylist = expressAsyncHandler(async (req, res) => {
 
   return sendRes(res, 201, { playlist: updatedPlaylist }, message);
 });
+const getPlaylistByID = expressAsyncHandler(async (req, res) => {
+  const { playlistID } = req.params;
+  const userID = req.user?.details?._id;
+
+  if (!mongoose.isValidObjectId(playlistID))
+    return sendRes(res, 400, {}, "Not a valid playlist ID");
+
+  // const playlist = await Playlists.findById(playlistID)
+  //   .populate("videos")
+  //   .populate("owner")
+  //   .lean();
+
+  const playlist = await Playlists.aggregate([
+    // Get the Playlist with the given ID
+    { $match: { _id: new mongoose.Types.ObjectId(playlistID) } },
+
+    // Populate Owner
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+
+    // Populate Videos
+    {
+      $lookup: {
+        from: "videos",
+        localField: "videos",
+        foreignField: "_id",
+        as: "videos",
+        pipeline: [
+          {
+            $lookup: {
+              from: "likes",
+              localField: "_id",
+              foreignField: "video",
+              as: "likes",
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "creator",
+              foreignField: "_id",
+              as: "creator",
+            },
+          },
+          {
+            $lookup: {
+              from: "watch-histories",
+              localField: "videoID",
+              foreignField: "video",
+              as: "views",
+            },
+          },
+          {
+            $addFields: {
+              likes_count: { $size: "$likes" },
+              isLiked: {
+                $cond: {
+                  if: {
+                    $in: [
+                      new mongoose.Types.ObjectId(userID),
+                      "$likes.likedBy",
+                    ],
+                  },
+                  then: true,
+                  else: false,
+                },
+              },
+              creator: {
+                $first: "$creator",
+              },
+
+              views_count: { $size: "$views" },
+              isViewed: {
+                $cond: {
+                  if: {
+                    $in: [new mongoose.Types.ObjectId(userID), "$views.viewer"],
+                  },
+                  then: true,
+                  else: false,
+                },
+              },
+              lastWatched: {
+                $let: {
+                  vars: {
+                    matchedView: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$views",
+                            as: "view",
+                            cond: {
+                              $eq: [
+                                "$$view.viewer",
+                                new mongoose.Types.ObjectId(userID),
+                              ],
+                            },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  in: "$$matchedView.lastWatched",
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
+
+    // Manipulate & Add Fields
+    {
+      $addFields: {
+        owner: {
+          $first: "$owner",
+        },
+      },
+    },
+  ]);
+
+  console.log(playlist[0]?.owner?._id?.toString(), userID);
+
+  const isMinePlaylist = playlist[0]?.owner?._id?.toString() === userID;
+
+  if (playlist[0]?.isPrivate && !isMinePlaylist)
+    return sendRes(
+      res,
+      403,
+      {},
+      "This is a Private Playlist. Only the owner can access it"
+    );
+
+  return sendRes(res, 200, { playlist: playlist[0] }, "Playlist Found");
+});
 
 module.exports = {
   createPlaylist,
   addVideosToPlaylist,
   addVideoToPlaylists,
   toggleVideoInPlaylist,
+  getPlaylistByID,
 };

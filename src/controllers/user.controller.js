@@ -3,16 +3,17 @@ const User = require("../models/User");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
 const Videos = require("../models/Videos");
 const Playlists = require("../models/Playlist");
+const { Types } = require("mongoose");
 
 const customizeUser = asyncHandler(async (req, res) => {
-  const { name, user_handle, links } = req.body;
+  const { name, desc, user_handle, links } = req.body;
 
   // Try to update the basic info first
   let updatedUser = await User.findByIdAndUpdate(
     req.params.id,
 
     {
-      $set: { name, user_handle, links },
+      $set: { name, user_handle, links, desc },
     },
 
     { new: true } // This option returns the modified document, rather than the original
@@ -73,14 +74,89 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const getVideosByUser = asyncHandler(async (req, res) => {
-  const videos = await Videos.find({
-    creator: req.params.id,
-  })
-    .sort({
-      createdAt: -1,
-    })
-    .populate("creator")
-    .lean();
+  const channelID = req.params.channelID;
+  const userID = req.user?.details?._id;
+
+  const videos = await Videos.aggregate([
+    {
+      $match: {
+        creator: new Types.ObjectId(channelID),
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "creator",
+        foreignField: "_id",
+        as: "creator",
+      },
+    },
+    {
+      $lookup: {
+        from: "watch-histories",
+        localField: "videoID",
+        foreignField: "video",
+        as: "views",
+      },
+    },
+    {
+      $addFields: {
+        likes_count: { $size: "$likes" },
+        isLiked: {
+          $cond: {
+            if: {
+              $in: [new Types.ObjectId(userID), "$likes.likedBy"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        creator: {
+          $first: "$creator",
+        },
+
+        views_count: { $size: "$views" },
+        isViewed: {
+          $cond: {
+            if: {
+              $in: [new Types.ObjectId(userID), "$views.viewer"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        lastWatched: {
+          $let: {
+            vars: {
+              matchedView: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$views",
+                      as: "view",
+                      cond: {
+                        $eq: ["$$view.viewer", new Types.ObjectId(userID)],
+                      },
+                    },
+                  },
+                  0,
+                ],
+              },
+            },
+            in: "$$matchedView.lastWatched",
+          },
+        },
+      },
+    },
+  ]).sort({ createdAt: -1 });
 
   res.status(200).json({
     videos,

@@ -4,13 +4,14 @@ const {
   addVideosToPlaylist,
   addVideoToPlaylists,
   toggleVideoInPlaylist,
+  getPlaylistByID,
 } = require("../controllers/playlist.controller");
 
 const playlilstRouter = express.Router();
 
-// playlilstRouter.route("/:playlistID").post(createPlaylist);
 playlilstRouter.route("/").post(createPlaylist);
 
+playlilstRouter.route("/:playlistID").get(getPlaylistByID);
 playlilstRouter.route("/:playlistID/add-videos").post(addVideosToPlaylist);
 playlilstRouter.route("/:playlistID/toggle-video").post(toggleVideoInPlaylist);
 
