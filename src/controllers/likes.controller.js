@@ -40,10 +40,10 @@ const likeContent = expressAsyncHandler(async function (req, res) {
 
     if (isAlreadyLiked) {
       await Likes.deleteOne(commonFindingObj);
-      return res.status(200).json({ msg: "Like Removed" });
+      return res.status(200).json({ msg: "Like Removed", isLiked: false });
     } else {
       await Likes.create(commonFindingObj);
-      return res.status(200).json({ msg: "Like Added" });
+      return res.status(200).json({ msg: "Like Added", isLiked: true });
     }
   } catch (error) {
     console.log(error);

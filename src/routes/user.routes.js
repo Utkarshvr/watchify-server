@@ -5,12 +5,14 @@ const {
   customizeUser,
   getUserById,
   getVideosByUser,
+  getUsersPlaylist,
 } = require("../controllers/user.controller");
 
 const userRouter = express.Router();
 
 userRouter.get("/:id", getUserById);
 userRouter.get("/:id/videos", getVideosByUser);
+userRouter.get("/me/playlists", getUsersPlaylist);
 
 userRouter.post(
   "/:id/customize",

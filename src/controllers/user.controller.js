@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
 const Videos = require("../models/Videos");
+const Playlists = require("../models/Playlist");
 
 const customizeUser = asyncHandler(async (req, res) => {
   const { name, user_handle, links } = req.body;
@@ -86,4 +87,29 @@ const getVideosByUser = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { customizeUser, getUserById, getVideosByUser };
+const getUsersPlaylist = asyncHandler(async (req, res) => {
+  const user = req.user?.details;
+  const userID = user?._id;
+  console.log(req.user, userID);
+
+  const playlists = await Playlists.find({
+    owner: userID,
+  })
+    .sort({
+      createdAt: -1,
+    })
+    .populate("owner")
+    .populate("videos")
+    .lean();
+
+  res.status(200).json({
+    playlists,
+  });
+});
+
+module.exports = {
+  customizeUser,
+  getUserById,
+  getVideosByUser,
+  getUsersPlaylist,
+};

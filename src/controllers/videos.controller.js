@@ -5,6 +5,7 @@ const { generateVideoId } = require("../helpers/utility");
 const {
   Types: { ObjectId },
 } = require("mongoose");
+const WatchHistory = require("../models/WatchHistory");
 
 const createVideo = asyncHandler(async (req, res) => {
   // Your code for the CreateVideo function goes here
@@ -49,6 +50,13 @@ const getVideoById = asyncHandler(async (req, res) => {
   const videoID = req.params.id;
   const userID = req.user?.details?._id;
 
+  // Check if the video exists in the user's watch history
+  await WatchHistory.findOneAndUpdate(
+    { viewer: userID, video: videoID },
+    { $set: { lastWatched: new Date() } }, // Set additional fields as needed
+    { upsert: true, new: true } // "upsert" creates the document if it doesn't exist, "new" returns the modified document
+  ).lean();
+
   const video = await Videos.aggregate([
     {
       $lookup: {
@@ -67,6 +75,14 @@ const getVideoById = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "watch-histories",
+        localField: "videoID",
+        foreignField: "video",
+        as: "views",
+      },
+    },
+    {
       $addFields: {
         likes_count: { $size: "$likes" },
         isLiked: {
@@ -81,6 +97,38 @@ const getVideoById = asyncHandler(async (req, res) => {
         creator: {
           $first: "$creator",
         },
+
+        views_count: { $size: "$views" },
+        isViewed: {
+          $cond: {
+            if: {
+              $in: [new ObjectId(userID), "$views.viewer"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        lastWatched: {
+          $let: {
+            vars: {
+              matchedView: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$views",
+                      as: "view",
+                      cond: {
+                        $eq: ["$$view.viewer", new ObjectId(userID)],
+                      },
+                    },
+                  },
+                  0,
+                ],
+              },
+            },
+            in: "$$matchedView.lastWatched",
+          },
+        },
       },
     },
     {
@@ -92,7 +140,9 @@ const getVideoById = asyncHandler(async (req, res) => {
   ]);
 
   res.status(200).json({
-    video: video[0],
+    video: {
+      ...video[0],
+    },
   });
 });
 
@@ -123,6 +173,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "watch-histories",
+        localField: "videoID",
+        foreignField: "video",
+        as: "views",
+      },
+    },
+    {
       $addFields: {
         likes_count: { $size: "$likes" },
         isLiked: {
@@ -136,6 +194,38 @@ const getAllVideos = asyncHandler(async (req, res) => {
         },
         creator: {
           $first: "$creator",
+        },
+
+        views_count: { $size: "$views" },
+        isViewed: {
+          $cond: {
+            if: {
+              $in: [new ObjectId(userID), "$views.viewer"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        lastWatched: {
+          $let: {
+            vars: {
+              matchedView: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$views",
+                      as: "view",
+                      cond: {
+                        $eq: ["$$view.viewer", new ObjectId(userID)],
+                      },
+                    },
+                  },
+                  0,
+                ],
+              },
+            },
+            in: "$$matchedView.lastWatched",
+          },
         },
       },
     },
