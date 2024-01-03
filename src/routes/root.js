@@ -11,7 +11,7 @@ const playlilstRouter = require("./playlist.routes.js");
 
 const rootRoute = express.Router();
 
-rootRoute.use("/", (req, res) =>
+rootRoute.get("/", (req, res) =>
   res.status(200).json({ msg: "Welcome to Watchify API" })
 );
 
