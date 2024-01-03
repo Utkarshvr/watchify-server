@@ -20,6 +20,8 @@ app.use(
     name: "session",
     keys: ["uv_codes"],
     maxAge: 24 * 60 * 60 * 100 * 7, // 7 Days
+    sameSite: "None",
+    secure: true,
   })
 );
 
