@@ -2,7 +2,8 @@
   "name": "watchify-server",
   "main": "server.js",
   "scripts": {
-    "dev": "supervisor src/server.js"
+    "dev": "supervisor src/server.js",
+    "vercel-build": "echo hello"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
