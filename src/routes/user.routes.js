@@ -6,16 +6,21 @@ const {
   getUserById,
   getVideosByUser,
   getUsersPlaylist,
+  getUsersWatchHistory,
 } = require("../controllers/user.controller");
+const { isAuthorized } = require("../middlewares/auth.middleware");
 
 const userRouter = express.Router();
 
-userRouter.get("/:id", getUserById);
-userRouter.get("/:id/videos", getVideosByUser);
+// Check if user is authorized
+userRouter.use(isAuthorized);
+
+userRouter.get("/me", getUserById);
 userRouter.get("/me/playlists", getUsersPlaylist);
+userRouter.get("/me/watch-history", getUsersWatchHistory);
 
 userRouter.post(
-  "/:id/customize",
+  "/me/customize",
   upload.fields([
     { name: "user_picture", maxCount: 1 },
     { name: "banner_image", maxCount: 1 },

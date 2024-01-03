@@ -217,7 +217,7 @@ const getPlaylistByID = expressAsyncHandler(async (req, res) => {
           {
             $lookup: {
               from: "watch-histories",
-              localField: "videoID",
+              localField: "_id",
               foreignField: "video",
               as: "views",
             },

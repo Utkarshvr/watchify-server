@@ -4,6 +4,7 @@ const { uploadOnCloudinary } = require("../utils/cloudinary");
 const Videos = require("../models/Videos");
 const Playlists = require("../models/Playlist");
 const { Types } = require("mongoose");
+const WatchHistory = require("../models/WatchHistory");
 
 const customizeUser = asyncHandler(async (req, res) => {
   const { name, desc, user_handle, links } = req.body;
@@ -64,8 +65,10 @@ const customizeUser = asyncHandler(async (req, res) => {
 });
 
 const getUserById = asyncHandler(async (req, res) => {
+  const userID = req.user?.details?._id;
+
   try {
-    const user = User.findById(req.params.id);
+    const user = User.findById(userID);
     if (!user) return res.status(404).json({ msg: "User not found" });
     res.status(200).json({ user, msg: "User Fetched Successfully" });
   } catch (error) {
@@ -102,7 +105,7 @@ const getVideosByUser = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "watch-histories",
-        localField: "videoID",
+        localField: "_id",
         foreignField: "video",
         as: "views",
       },
@@ -183,9 +186,109 @@ const getUsersPlaylist = asyncHandler(async (req, res) => {
   });
 });
 
+const getUsersWatchHistory = asyncHandler(async (req, res) => {
+  const user = req.user?.details;
+  const userID = user?._id;
+  console.log(userID);
+
+  const watchHistory = await WatchHistory.aggregate([
+    {
+      $match: {
+        viewer: new Types.ObjectId(userID),
+      },
+    },
+
+    {
+      $lookup: {
+        from: "videos",
+        localField: "video",
+        foreignField: "_id",
+        as: "video",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "creator",
+              foreignField: "_id",
+              as: "creator",
+            },
+          },
+          {
+            $lookup: {
+              from: "watch-histories",
+              localField: "_id",
+              foreignField: "video",
+              as: "views",
+            },
+          },
+          {
+            $addFields: {
+              creator: {
+                $first: "$creator",
+              },
+              views_count: {
+                $size: "$views",
+              },
+              lastWatched: {
+                $let: {
+                  vars: {
+                    matchedView: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$views",
+                            as: "view",
+                            cond: {
+                              $eq: [
+                                "$$view.viewer",
+                                new Types.ObjectId(userID),
+                              ],
+                            },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  in: "$$matchedView.lastWatched",
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        video: {
+          $first: "$video",
+        },
+      },
+    },
+  ]).sort({
+    updatedAt: -1,
+  });
+
+  // const watchHistory = await WatchHistory.find({
+  //   viewer: userID,
+  // })
+  //   .sort({
+  //     createdAt: -1,
+  //   })
+  //   .populate("viewer")
+  //   .populate("video")
+  //   .lean();
+  console.log(watchHistory);
+
+  return res.status(200).json({
+    watchHistory,
+  });
+});
+
 module.exports = {
   customizeUser,
   getUserById,
   getVideosByUser,
   getUsersPlaylist,
+  getUsersWatchHistory,
 };

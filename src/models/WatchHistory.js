@@ -8,7 +8,7 @@ const schema = new Schema(
       required: true,
     },
     video: {
-      type: String,
+      type: Schema.Types.ObjectId,
       ref: "Video",
       required: true,
     },

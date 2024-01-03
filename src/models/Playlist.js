@@ -10,6 +10,10 @@ const playlistSchema = new Schema(
       type: String,
       required: false,
     },
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
     isPrivate: {
       type: Boolean,
       default: true,

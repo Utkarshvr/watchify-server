@@ -2,6 +2,7 @@ const expressAsyncHandler = require("express-async-handler");
 const Likes = require("../models/Likes");
 const Videos = require("../models/Videos");
 const Comments = require("../models/Comments");
+const Playlists = require("../models/Playlist");
 
 const likeContent = expressAsyncHandler(async function (req, res) {
   try {
@@ -28,22 +29,51 @@ const likeContent = expressAsyncHandler(async function (req, res) {
         msg: `${contentType} not found`,
       });
 
-    const commonFindingObj = {
-      likedBy: userID,
-      contentType,
-      ...(contentType === "video"
-        ? { video: existingContent?._id }
-        : { comment: contentID }),
-    };
+    // const commonFindingObj = {
+    //   likedBy: userID,
+    //   contentType,
+    //   ...(contentType === "video"
+    //     ? { video: existingContent?._id }
+    //     : { comment: contentID }),
+    // };
 
-    const isAlreadyLiked = await Likes.findOne(commonFindingObj).lean();
+    if (contentType === "video") {
+      // Add video to "Liked Videos" Playlist of the logged in user
+      const likedVideosPlaylist = await Playlists.findOne({
+        title: "Liked Videos",
+        owner: userID,
+      });
 
-    if (isAlreadyLiked) {
-      await Likes.deleteOne(commonFindingObj);
-      return res.status(200).json({ msg: "Like Removed", isLiked: false });
-    } else {
-      await Likes.create(commonFindingObj);
-      return res.status(200).json({ msg: "Like Added", isLiked: true });
+      const likedVideos = likedVideosPlaylist.videos?.map((v) => v?.toString());
+
+      const isVideoAlreadyLiked = likedVideos.some(
+        (v) => v?.toString() === existingContent?._id?.toString()
+      );
+
+      // console.log(
+      //   likedVideosPlaylist,
+      //   likedVideos,
+      //   existingContent?._id?.toString(),
+      //   isVideoAlreadyLiked
+      // );
+
+      if (isVideoAlreadyLiked) {
+        likedVideosPlaylist.videos = likedVideos.filter(
+          (v) => v !== existingContent?._id?.toString()
+        );
+        await likedVideosPlaylist.save();
+        return res.status(200).json({ msg: "Like Removed", isLiked: false });
+      } else {
+        // console.log([...likedVideos, existingContent?._id?.toString()]);
+
+        likedVideosPlaylist.videos = [
+          ...likedVideos,
+          existingContent?._id?.toString(),
+        ];
+        await likedVideosPlaylist.save();
+
+        return res.status(200).json({ msg: "Like Added", isLiked: true });
+      }
     }
   } catch (error) {
     console.log(error);
