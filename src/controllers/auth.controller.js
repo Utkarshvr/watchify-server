@@ -4,14 +4,16 @@ const randomNumber = require("../helpers/randomNumber");
 const generateUniqueChannelID = require("../helpers/generateChannelID");
 
 const login = asyncHandler(async (req, res) => {
+  console.log("Request Reached");
+
   if (req.user) {
-    // console.log(req.user);
+    console.log(req.user);
     // 1. Extract email & all other necessary fields
     const { email, given_name, family_name, name, picture } = req.user._json;
     // // console.log("detials", { email, given_name, family_name, name, picture });
 
     const userByEmail = await User.findOne({ email });
-    // console.log("Existing User: ", !!userByEmail, userByEmail);
+    console.log("Existing User: ", !!userByEmail, userByEmail);
 
     // 2. if email already exists in the DB. Return it & it's done
     if (userByEmail) {
@@ -24,6 +26,8 @@ const login = asyncHandler(async (req, res) => {
         user: userByEmail,
       });
     }
+
+    console.log("Create a New One");
     let isUserHandleUnique = false;
     let isChannelIDUnique = false;
     let userHandle;
@@ -38,7 +42,8 @@ const login = asyncHandler(async (req, res) => {
       }${randomNumber()}`;
 
       // Check if the generated userHandle already exists in the database
-      const existingUser = await User.findOne({ userHandle });
+      const existingUser = await User.findOne({ user_handle: userHandle });
+      console.log("Unique: ", userHandle, !existingUser);
 
       // If no user is found with the generated userHandle, it's unique
       if (!existingUser) {
@@ -51,6 +56,7 @@ const login = asyncHandler(async (req, res) => {
 
       // Check if the generated userHandle already exists in the database
       const existingUser = await User.findOne({ channelID });
+      console.log("Unique ", channelID, !existingUser);
 
       // If no user is found with the generated userHandle, it's unique
       if (!existingUser) {
@@ -67,12 +73,14 @@ const login = asyncHandler(async (req, res) => {
       family_name,
       name,
       picture,
-      userHandle,
+      user_handle: userHandle,
       channelID,
+      desc: "",
     };
+    console.log(userObj);
 
     let newUser = await User.create(userObj);
-    // console.log("New User: ", newUser);
+    console.log("New User: ", newUser);
     req.user.details = newUser;
 
     return res.status(201).json({
