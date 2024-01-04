@@ -20,10 +20,7 @@ console.log({
   sameSite: "lax",
   secure: process.env.IN_DEVELOPMENT !== "YES",
   httpOnly: process.env.IN_DEVELOPMENT !== "YES",
-  domain:
-    process.env.IN_DEVELOPMENT === "YES"
-      ? ""
-      : "https://watchify-client.vercel.app", // Use domain in production
+  domain: process.env.DOMAIN || "", // Use domain in production
 });
 
 app.use(
@@ -32,16 +29,11 @@ app.use(
     keys: ["uv_codes"],
     maxAge: 24 * 60 * 60 * 100 * 7, // 7 Days
     // sameSite: process.env.IN_DEVELOPMENT !== "YES" ? "none" : "lax",
+
     sameSite: "lax",
     secure: process.env.IN_DEVELOPMENT !== "YES", // Use secure in production
     httpOnly: process.env.IN_DEVELOPMENT !== "YES", // Use httpOnly in production
-    domain:
-      process.env.IN_DEVELOPMENT === "YES"
-        ? ""
-        : "https://watchify-client.vercel.app", // Use domain in production
-
-    // secure: false,
-    // httpOnly: false,
+    domain: process.env.DOMAIN || "",
   })
 );
 
