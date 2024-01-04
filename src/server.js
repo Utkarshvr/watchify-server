@@ -17,29 +17,12 @@ const port = process.env.PORT || 8080;
 
 connectToDB();
 
-// console.log(("IN_DEVELOPMENT: ", process.env.IN_DEVELOPMENT === "YES"));
-// console.log({
-//   sameSite: "lax",
-//   secure: process.env.IN_DEVELOPMENT !== "YES",
-//   httpOnly: process.env.IN_DEVELOPMENT !== "YES",
-//   domain: process.env.DOMAIN || "", // Use domain in production
-// });
-
-// app.use(
-//   cookieSession({
-//     name: "session",
-//     keys: ["uv_codes"],
-//     maxAge: 24 * 60 * 60 * 100 * 7, // 7 Days
-//     // sameSite: process.env.IN_DEVELOPMENT !== "YES" ? "none" : "lax",
-
-//     sameSite: "lax",
-//     secure: process.env.IN_DEVELOPMENT !== "YES", // Use secure in production
-//     httpOnly: process.env.IN_DEVELOPMENT !== "YES", // Use httpOnly in production
-//     domain: process.env.DOMAIN || "",
-//   })
-// );
-
 console.log({ secure: process.env.IN_DEVELOPMENT !== "YES" });
+
+if (process.env.IN_DEVELOPMENT !== "YES") {
+  app.set("trust proxy", 1); // trust first proxy
+}
+
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(
@@ -48,8 +31,11 @@ app.use(
     resave: false, // Avoid unnecessary session store writes
     saveUninitialized: false, // Avoid storing uninitialized sessions
     cookie: {
-      secure: process.env.IN_DEVELOPMENT !== "YES",
       maxAge: 24 * 60 * 60 * 1000 * 7, // 7 days in milliseconds
+      // path: "/",
+      // sameSite: "none",
+      secure: process.env.IN_DEVELOPMENT !== "YES",
+      // httpOnly: true,
     },
   })
 );
@@ -57,8 +43,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
-
-// app.use(cookieParser());
 
 require("./passport");
 app.use(passport.initialize());
