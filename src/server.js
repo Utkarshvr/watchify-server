@@ -15,13 +15,25 @@ require("./passport");
 
 connectToDB();
 
+console.log(("IN_DEVELOPMENT: ", process.env.IN_DEVELOPMENT === "YES"));
+console.log({
+  sameSite: "lax",
+  secure: process.env.IN_DEVELOPMENT !== "YES",
+  httpOnly: process.env.IN_DEVELOPMENT !== "YES",
+});
+
 app.use(
   cookieSession({
     name: "session",
     keys: ["uv_codes"],
     maxAge: 24 * 60 * 60 * 100 * 7, // 7 Days
-    sameSite: process.env.IN_DEVELOPMENT === "YES" ? "none" : "lax",
-    secure: process.env.IN_DEVELOPMENT === "YES",
+    // sameSite: process.env.IN_DEVELOPMENT !== "YES" ? "none" : "lax",
+    sameSite: "lax",
+    secure: process.env.IN_DEVELOPMENT !== "YES", // Use secure in production
+    httpOnly: process.env.IN_DEVELOPMENT !== "YES", // Use httpOnly in production
+
+    // secure: false,
+    // httpOnly: false,
   })
 );
 
