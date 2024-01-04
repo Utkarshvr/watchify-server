@@ -39,6 +39,7 @@ connectToDB();
 //   })
 // );
 
+console.log({ secure: process.env.IN_DEVELOPMENT !== "YES" });
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(
@@ -46,6 +47,10 @@ app.use(
     secret: "your_secret_key",
     resave: false, // Avoid unnecessary session store writes
     saveUninitialized: false, // Avoid storing uninitialized sessions
+    cookie: {
+      secure: process.env.IN_DEVELOPMENT !== "YES",
+      maxAge: 24 * 60 * 60 * 1000 * 7, // 7 days in milliseconds
+    },
   })
 );
 
