@@ -5,8 +5,8 @@ const generateUniqueChannelID = require("../helpers/generateChannelID");
 const Playlists = require("../models/Playlist");
 
 const login = asyncHandler(async (req, res) => {
-  // console.log("Request Reached");
-
+  console.log("AUTH LOGIN");
+  console.log(req.user);
   if (req.user) {
     // console.log(req.user);
     // 1. Extract email & all other necessary fields
