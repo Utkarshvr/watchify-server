@@ -32,10 +32,10 @@ app.use(
     saveUninitialized: false, // Avoid storing uninitialized sessions
     cookie: {
       maxAge: 24 * 60 * 60 * 1000 * 7, // 7 days in milliseconds
-      // path: "/",
-      // sameSite: "none",
+      path: "/",
+      sameSite: "none",
       secure: process.env.IN_DEVELOPMENT !== "YES",
-      // httpOnly: true,
+      httpOnly: true,
     },
   })
 );
