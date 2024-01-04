@@ -20,6 +20,10 @@ console.log({
   sameSite: "lax",
   secure: process.env.IN_DEVELOPMENT !== "YES",
   httpOnly: process.env.IN_DEVELOPMENT !== "YES",
+  domain:
+    process.env.IN_DEVELOPMENT === "YES"
+      ? ""
+      : "https://watchify-client.vercel.app", // Use domain in production
 });
 
 app.use(
@@ -31,6 +35,10 @@ app.use(
     sameSite: "lax",
     secure: process.env.IN_DEVELOPMENT !== "YES", // Use secure in production
     httpOnly: process.env.IN_DEVELOPMENT !== "YES", // Use httpOnly in production
+    domain:
+      process.env.IN_DEVELOPMENT === "YES"
+        ? ""
+        : "https://watchify-client.vercel.app", // Use domain in production
 
     // secure: false,
     // httpOnly: false,
