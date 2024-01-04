@@ -139,18 +139,20 @@ const getVideoById = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const isAlreadyWatched = await WatchHistory.findOne({
-    viewer: userID,
-    video: video[0]?._id,
-  }).lean();
-  // Check if the video exists in the user's watch history
-  const historyResponse = await WatchHistory.findOneAndUpdate(
-    { viewer: userID, video: video[0]?._id },
-    { $set: { lastWatched: new Date() } }, // Set additional fields as needed
-    { upsert: true, new: true } // "upsert" creates the document if it doesn't exist, "new" returns the modified document
-  ).lean();
-  console.log({ historyResponse });
-
+  let isAlreadyWatched;
+  if (userID) {
+    isAlreadyWatched = await WatchHistory.findOne({
+      viewer: userID,
+      video: video[0]?._id,
+    }).lean();
+    // Check if the video exists in the user's watch history
+    const historyResponse = await WatchHistory.findOneAndUpdate(
+      { viewer: userID, video: video[0]?._id },
+      { $set: { lastWatched: new Date() } }, // Set additional fields as needed
+      { upsert: true, new: true } // "upsert" creates the document if it doesn't exist, "new" returns the modified document
+    ).lean();
+    console.log({ historyResponse });
+  }
   // const video = await Videos.aggregate([
   //   {
   //     $lookup: {
@@ -236,9 +238,13 @@ const getVideoById = asyncHandler(async (req, res) => {
   res.status(200).json({
     video: {
       ...video[0],
-      views_count: isAlreadyWatched
-        ? video[0]?.views_count
-        : video[0]?.views_count + 1,
+      ...(userID
+        ? {
+            views_count: isAlreadyWatched
+              ? video[0]?.views_count
+              : video[0]?.views_count + 1,
+          }
+        : {}),
     },
     isViewed: isAlreadyWatched,
   });
