@@ -11,6 +11,8 @@ const rootRoute = require("./routes/root");
 
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
+const createMemoryStore = require("memorystore");
+const MemoryStore = createMemoryStore(session);
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -30,6 +32,9 @@ app.use(
     secret: "your_secret_key",
     resave: false, // Avoid unnecessary session store writes
     saveUninitialized: false, // Avoid storing uninitialized sessions
+    store: new MemoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
+    }),
     cookie: {
       maxAge: 24 * 60 * 60 * 1000 * 7, // 7 days in milliseconds
       path: "/",
