@@ -6,12 +6,15 @@ const {
   Types: { ObjectId },
 } = require("mongoose");
 const WatchHistory = require("../models/WatchHistory");
+const {
+  addVideoToPlaylistsUtil,
+} = require("../utils/mongo/playlists/playlist.utility");
 
 const createVideo = asyncHandler(async (req, res) => {
   // Your code for the CreateVideo function goes here
-  const { title, desc, creator, isPublic } = req.body;
+  const { title, desc, creator, isPublic, selectedPlaylists } = req.body;
 
-  console.log(req.body, req.files);
+  console.log(isPublic, JSON.parse(isPublic));
 
   const videoPath = req.files?.video ? req.files?.video[0]?.path : null;
 
@@ -39,6 +42,19 @@ const createVideo = asyncHandler(async (req, res) => {
     videoID,
     isPublic: isPublic === null ? true : JSON.parse(isPublic),
   });
+
+  // Add to playlists, if given
+  if (selectedPlaylists?.length > 0) {
+    try {
+      const updatedPlaylists = await addVideoToPlaylistsUtil(
+        newVideo?._id,
+        selectedPlaylists
+      );
+      console.log({ updatedPlaylists });
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   res.status(201).json({
     video: newVideo,

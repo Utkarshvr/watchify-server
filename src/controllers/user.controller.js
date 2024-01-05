@@ -19,10 +19,10 @@ const customizeUser = asyncHandler(async (req, res) => {
 
     { new: true } // This option returns the modified document, rather than the original
   ).lean();
-  console.log(updatedUser);
+  // console.log(updatedUser);
 
   // Upload Images to Cloudinary
-  console.log(req.files);
+  // console.log(req.files);
 
   const user_picturePath = req.files?.user_picture
     ? req.files?.user_picture[0]?.path
@@ -56,7 +56,7 @@ const customizeUser = asyncHandler(async (req, res) => {
     ).lean();
   }
 
-  console.log(updatedUser);
+  // console.log(updatedUser);
 
   res.status(200).json({
     updatedUser,
@@ -169,7 +169,7 @@ const getVideosByUser = asyncHandler(async (req, res) => {
 const getUsersPlaylist = asyncHandler(async (req, res) => {
   const user = req.user?.details;
   const userID = user?._id;
-  console.log(req.user, userID);
+  // console.log(req.user, userID);
 
   const playlists = await Playlists.find({
     owner: userID,
@@ -189,7 +189,7 @@ const getUsersPlaylist = asyncHandler(async (req, res) => {
 const getUsersWatchHistory = asyncHandler(async (req, res) => {
   const user = req.user?.details;
   const userID = user?._id;
-  console.log(userID);
+  // console.log(userID);
 
   const watchHistory = await WatchHistory.aggregate([
     {
@@ -278,7 +278,7 @@ const getUsersWatchHistory = asyncHandler(async (req, res) => {
   //   .populate("viewer")
   //   .populate("video")
   //   .lean();
-  console.log(watchHistory);
+  // console.log(watchHistory);
 
   return res.status(200).json({
     watchHistory,

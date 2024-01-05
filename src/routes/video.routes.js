@@ -6,6 +6,7 @@ const {
   getVideoById,
   getAllVideos,
 } = require("../controllers/videos.controller");
+const { isAuthorized } = require("../middlewares/auth.middleware");
 
 const videoRouter = express.Router();
 
@@ -15,6 +16,7 @@ videoRouter.get("/:id", getVideoById);
 
 videoRouter.post(
   "/create",
+  isAuthorized,
   upload.fields([
     { name: "video", maxCount: 1 },
     { name: "thumbnail", maxCount: 1 },

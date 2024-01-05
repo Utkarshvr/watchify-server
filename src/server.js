@@ -19,13 +19,13 @@ const port = process.env.PORT || 8080;
 
 connectToDB();
 
-console.log({
-  maxAge: 24 * 60 * 60 * 1000 * 7, // 7 days in milliseconds
-  path: "/",
-  sameSite: process.env.IN_DEVELOPMENT !== "YES" ? "none" : "lax",
-  secure: process.env.IN_DEVELOPMENT !== "YES",
-  httpOnly: true,
-});
+// console.log({
+//   maxAge: 24 * 60 * 60 * 1000 * 7, // 7 days in milliseconds
+//   path: "/",
+//   sameSite: process.env.IN_DEVELOPMENT !== "YES" ? "none" : "lax",
+//   secure: process.env.IN_DEVELOPMENT !== "YES",
+//   httpOnly: true,
+// });
 
 if (process.env.IN_DEVELOPMENT !== "YES") {
   app.set("trust proxy", 1); // trust first proxy
