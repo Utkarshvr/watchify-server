@@ -2,19 +2,30 @@ const { Schema, model } = require("mongoose");
 
 const commentSchema = new Schema(
   {
-    videoID: {
+    isReply: {
+      type: Boolean,
+      required: true,
+    },
+    video: {
       type: Schema.Types.ObjectId,
       ref: "Video",
       required: true,
     },
-    user: {
+    commenter: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    comment: {
+    content: {
       type: String,
       required: true,
+    },
+    parentComment: {
+      type: Schema.Types.ObjectId,
+      ref: "Comment", // Reference to the Comment model for the parent comment
+      required: function () {
+        return this.isReply;
+      },
     },
   },
   { timestamps: true }

@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Videos = require("../models/Videos");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
-const { generateVideoId } = require("../helpers/utility");
+const { generateVideoId, formatComments } = require("../helpers/utility");
 const {
   Types: { ObjectId },
 } = require("mongoose");
@@ -9,6 +9,8 @@ const WatchHistory = require("../models/WatchHistory");
 const {
   addVideoToPlaylistsUtil,
 } = require("../utils/mongo/playlists/playlist.utility");
+const Comments = require("../models/Comments");
+const sendRes = require("../utils/sendRes");
 
 const createVideo = asyncHandler(async (req, res) => {
   // Your code for the CreateVideo function goes here
@@ -439,4 +441,35 @@ const getAllVideos = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { createVideo, getVideoById, getAllVideos };
+const getCommentsByVideoID = asyncHandler(async (req, res) => {
+  const videoID = req.params.id;
+
+  try {
+    const commentsDB = await Comments.find({ video: videoID })
+      .populate("commenter")
+      .populate("parentComment")
+      .lean();
+
+    return sendRes(
+      res,
+      200,
+      {
+        // comments: commentsDB,
+        comments: formatComments(commentsDB),
+
+        // formattedComments: formatComments(commentsDB),
+      },
+      "All Comments Found"
+    );
+  } catch (error) {
+    console.log(error);
+    return sendRes(res, 500, null, "Comments not Found");
+  }
+});
+
+module.exports = {
+  createVideo,
+  getVideoById,
+  getAllVideos,
+  getCommentsByVideoID,
+};

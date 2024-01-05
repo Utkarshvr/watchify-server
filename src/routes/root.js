@@ -8,6 +8,7 @@ const videoRouter = require("./video.routes.js");
 const likesRouter = require("./likes.routes.js");
 const channelRouter = require("./channel.routes.js");
 const playlilstRouter = require("./playlist.routes.js");
+const commentRouter = require("./comment.routes.js");
 
 const rootRoute = express.Router();
 
@@ -25,7 +26,7 @@ rootRoute.use("/video", videoRouter);
 
 rootRoute.use("/playlist", playlilstRouter);
 
-// rootRoute.use("/subscriber", subscriberRouter);
+rootRoute.use("/comment", commentRouter);
 
 rootRoute.use("/like", likesRouter);
 

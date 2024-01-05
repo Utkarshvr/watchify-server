@@ -5,14 +5,19 @@ const {
   createVideo,
   getVideoById,
   getAllVideos,
+  getCommentsByVideoID,
 } = require("../controllers/videos.controller");
 const { isAuthorized } = require("../middlewares/auth.middleware");
+const { createComment } = require("../controllers/comment.controller");
 
 const videoRouter = express.Router();
 
 videoRouter.get("/all", getAllVideos);
 
 videoRouter.get("/:id", getVideoById);
+
+videoRouter.get("/:id/comments", getCommentsByVideoID);
+videoRouter.post("/:videoID/comment", createComment);
 
 videoRouter.post(
   "/create",
