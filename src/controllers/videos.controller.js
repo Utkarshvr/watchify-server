@@ -11,10 +11,13 @@ const {
 } = require("../utils/mongo/playlists/playlist.utility");
 const Comments = require("../models/Comments");
 const sendRes = require("../utils/sendRes");
+const Notifications = require("../models/Notifications");
+const notificationTypes = require("../config/notificationTypes");
 
 const createVideo = asyncHandler(async (req, res) => {
+  const creator = req.user?.details?._id;
   // Your code for the CreateVideo function goes here
-  const { title, desc, creator, isPublic, selectedPlaylists } = req.body;
+  const { title, desc, isPublic, selectedPlaylists } = req.body;
 
   console.log(isPublic, JSON.parse(isPublic));
 
@@ -57,6 +60,15 @@ const createVideo = asyncHandler(async (req, res) => {
       console.log(error);
     }
   }
+
+  await Notifications.create({
+    user: creator,
+    content: "Video Uploaded Successfully",
+    notificationType: notificationTypes.videoUpload,
+    payload: {
+      videoID: newVideo?._id,
+    },
+  });
 
   res.status(201).json({
     video: newVideo,

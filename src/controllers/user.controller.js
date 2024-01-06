@@ -5,6 +5,8 @@ const Videos = require("../models/Videos");
 const Playlists = require("../models/Playlist");
 const { Types } = require("mongoose");
 const WatchHistory = require("../models/WatchHistory");
+const Notifications = require("../models/Notifications");
+const sendRes = require("../utils/sendRes");
 
 const customizeUser = asyncHandler(async (req, res) => {
   const { name, desc, user_handle, links } = req.body;
@@ -285,10 +287,29 @@ const getUsersWatchHistory = asyncHandler(async (req, res) => {
   });
 });
 
+const getNotifications = asyncHandler(async (req, res) => {
+  const userID = req.user?.details?._id;
+  const isRead = req.query.isRead ? JSON.parse(req.query.isRead) : false;
+  console.log({ isRead });
+
+  const notifications = await Notifications.find({
+    user: userID,
+    isRead,
+  }).lean();
+
+  return sendRes(
+    res,
+    200,
+    { notifications },
+    `All ${isRead ? "" : "unread"} notifications found`
+  );
+});
+
 module.exports = {
   customizeUser,
   getUserById,
   getVideosByUser,
   getUsersPlaylist,
   getUsersWatchHistory,
+  getNotifications,
 };

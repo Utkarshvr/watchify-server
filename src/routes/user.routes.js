@@ -4,7 +4,7 @@ const upload = require("../middlewares/multer.middlewares");
 const {
   customizeUser,
   getUserById,
-  getVideosByUser,
+  getNotifications,
   getUsersPlaylist,
   getUsersWatchHistory,
 } = require("../controllers/user.controller");
@@ -18,6 +18,9 @@ userRouter.use(isAuthorized);
 userRouter.get("/me", getUserById);
 userRouter.get("/me/playlists", getUsersPlaylist);
 userRouter.get("/me/watch-history", getUsersWatchHistory);
+
+// Notifications
+userRouter.get("/me/notifications", getNotifications);
 
 userRouter.post(
   "/me/customize",
