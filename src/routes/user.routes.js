@@ -18,6 +18,16 @@ userRouter.use(isAuthorized);
 userRouter.get("/me", getUserById);
 userRouter.get("/me/playlists", getUsersPlaylist);
 userRouter.get("/me/watch-history", getUsersWatchHistory);
+userRouter.get("/me/notify", (req, res) => {
+  const socket = req.app.get("socket");
+  console.log({ socket });
+
+  socket.emit("notify-user", {
+    msg: "Notificaiton! Check kar",
+  });
+
+  res.send("Notified check");
+});
 
 // Notifications
 userRouter.get("/me/notifications", getNotifications);

@@ -15,6 +15,8 @@ const Notifications = require("../models/Notifications");
 const notificationTypes = require("../config/notificationTypes");
 
 const createVideo = asyncHandler(async (req, res) => {
+  const socket = req.app.get("socket");
+
   const creator = req.user?.details?._id;
   // Your code for the CreateVideo function goes here
   const { title, desc, isPublic, selectedPlaylists } = req.body;
@@ -61,12 +63,22 @@ const createVideo = asyncHandler(async (req, res) => {
     }
   }
 
+  // Socket IO: Notify-User
+  socket.emit("notify-user", {
+    user: creator,
+    content: "Video Uploaded Successfully",
+    notificationType: notificationTypes.videoUpload,
+    payload: {
+      newVideo,
+    },
+  });
+
   await Notifications.create({
     user: creator,
     content: "Video Uploaded Successfully",
     notificationType: notificationTypes.videoUpload,
     payload: {
-      videoID: newVideo?._id,
+      newVideo,
     },
   });
 
@@ -281,13 +293,28 @@ const getVideoById = asyncHandler(async (req, res) => {
 });
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  // const videos = await Videos.find({ isPublic: true })
-  //   .sort({
-  //     createdAt: -1,
-  //   })
-  //   .populate("creator")
-  //   .lean();
   const userID = req.user?.details?._id;
+
+  const socket = req.app.get("socket");
+  // console.log({ socket });
+  console.log("Notification must have been sent!!!", {
+    user: userID,
+    content: "Videos fetched",
+    notificationType: "video-fetched",
+    payload: {
+      msg: "hahahaha",
+    },
+  });
+
+  // Socket IO: Notify-User
+  socket.emit("notify-user", {
+    user: userID,
+    content: "Videos fetched",
+    notificationType: "video-fetched",
+    payload: {
+      msg: "hahahaha",
+    },
+  });
 
   const videos = await Videos.aggregate([
     {
