@@ -15,77 +15,116 @@ const Notifications = require("../models/Notifications");
 const notificationTypes = require("../config/notificationTypes");
 
 const createVideo = asyncHandler(async (req, res) => {
-  const socket = req.app.get("socket");
-
   const creator = req.user?.details?._id;
-  // Your code for the CreateVideo function goes here
+  const socket = req.app.get("socket");
   const { title, desc, isPublic, selectedPlaylists } = req.body;
+  const todayDate = new Date();
 
-  console.log(isPublic, JSON.parse(isPublic));
-
-  const videoPath = req.files?.video ? req.files?.video[0]?.path : null;
-
-  const thumbnailPath = req.files?.thumbnail
-    ? req.files?.thumbnail[0]?.path
-    : null;
-
-  const uploadedVideo = videoPath ? await uploadOnCloudinary(videoPath) : null;
-
-  const uploadedThumbnail = thumbnailPath
-    ? await uploadOnCloudinary(thumbnailPath)
-    : null;
-
-  if (!uploadedVideo?.url)
-    return res.status(400).json({ msg: "Couldn't upload video" });
-
-  const videoID = generateVideoId(16);
-
-  const newVideo = await Videos.create({
-    title,
-    desc,
-    creator,
-    link: uploadedVideo?.url,
-    thumbnail: uploadedThumbnail?.url || "",
-    videoID,
-    isPublic: isPublic === null ? true : JSON.parse(isPublic),
-  });
-
-  // Add to playlists, if given
-  if (selectedPlaylists?.length > 0) {
-    try {
-      const updatedPlaylists = await addVideoToPlaylistsUtil(
-        newVideo?._id,
-        selectedPlaylists
-      );
-      console.log({ updatedPlaylists });
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  const progress_notification = {
+    user: creator,
+    content: "Video is Uploading. It may take a few minutes",
+    severity: "in_progress",
+    notificationType: notificationTypes.videoUpload.inProgress(),
+    payload: {
+      video: {
+        title,
+        desc,
+        startedAt: todayDate.toJSON(),
+      },
+    },
+  };
 
   // Socket IO: Notify-User
-  socket.emit("notify-user", {
-    user: creator,
-    content: "Video Uploaded Successfully",
-    notificationType: notificationTypes.videoUpload,
-    payload: {
-      newVideo,
-    },
-  });
+  socket.emit("notify-user", progress_notification);
 
-  await Notifications.create({
-    user: creator,
-    content: "Video Uploaded Successfully",
-    notificationType: notificationTypes.videoUpload,
-    payload: {
-      newVideo,
-    },
-  });
+  const progressNotification = await Notifications.create(
+    progress_notification
+  );
 
-  res.status(201).json({
-    video: newVideo,
-    msg: "Video Uploaded Successfully",
-  });
+  try {
+    // Your code for the CreateVideo function goes here
+
+    // console.log(isPublic, JSON.parse(isPublic));
+
+    const videoPath = req.files?.video ? req.files?.video[0]?.path : null;
+
+    const thumbnailPath = req.files?.thumbnail
+      ? req.files?.thumbnail[0]?.path
+      : null;
+
+    const uploadedVideo = videoPath
+      ? await uploadOnCloudinary(videoPath)
+      : null;
+
+    const uploadedThumbnail = thumbnailPath
+      ? await uploadOnCloudinary(thumbnailPath)
+      : null;
+
+    if (!uploadedVideo?.url) throw Error("Couldn't upload the video");
+
+    const videoID = generateVideoId(16);
+
+    const newVideo = await Videos.create({
+      title,
+      desc,
+      creator,
+      link: uploadedVideo?.url,
+      thumbnail: uploadedThumbnail?.url || "",
+      videoID,
+      isPublic: isPublic === null ? true : JSON.parse(isPublic),
+    });
+
+    // Add to playlists, if given
+    if (selectedPlaylists?.length > 0) {
+      try {
+        const updatedPlaylists = await addVideoToPlaylistsUtil(
+          newVideo?._id,
+          selectedPlaylists
+        );
+        console.log({ updatedPlaylists });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    const success_notification = {
+      user: creator,
+      content: "Video Uploaded Successfully",
+      severity: "success",
+      notificationType: notificationTypes.videoUpload.success(),
+      payload: {
+        video: newVideo,
+      },
+    };
+
+    // Socket IO: Notify-User
+    socket.emit("notify-user", success_notification);
+
+    await Notifications.create(success_notification);
+
+    res.status(201).json({
+      video: newVideo,
+      msg: "Video Uploaded Successfully",
+    });
+  } catch (error) {
+    const error_notification = {
+      user: creator,
+      content: "Video Uploaded Failed",
+      severity: "error",
+      notificationType: notificationTypes.videoUpload.failed(),
+      payload: {
+        video: { title, desc, failedAt: todayDate.toJSON() },
+      },
+    };
+    // Socket IO: Notify-User
+    socket.emit("notify-user", error_notification);
+
+    await Notifications.create(error_notification);
+
+    return res.status(400).json({ msg: "Couldn't upload video" });
+  } finally {
+    await progressNotification.deleteOne();
+  }
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
@@ -294,27 +333,6 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const userID = req.user?.details?._id;
-
-  const socket = req.app.get("socket");
-  // console.log({ socket });
-  console.log("Notification must have been sent!!!", {
-    user: userID,
-    content: "Videos fetched",
-    notificationType: "video-fetched",
-    payload: {
-      msg: "hahahaha",
-    },
-  });
-
-  // Socket IO: Notify-User
-  socket.emit("notify-user", {
-    user: userID,
-    content: "Videos fetched",
-    notificationType: "video-fetched",
-    payload: {
-      msg: "hahahaha",
-    },
-  });
 
   const videos = await Videos.aggregate([
     {

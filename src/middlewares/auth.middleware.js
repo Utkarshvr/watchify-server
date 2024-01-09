@@ -4,7 +4,7 @@ const sendRes = require("../utils/sendRes");
 const isAuthorized = expressAsyncHandler((req, res, next) => {
   const user = req.user?.details;
 
-  console.log({ isAuthorized: !!user, user });
+  // console.log({ isAuthorized: !!user, user });
 
   if (user) return next();
 

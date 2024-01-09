@@ -289,20 +289,42 @@ const getUsersWatchHistory = asyncHandler(async (req, res) => {
 
 const getNotifications = asyncHandler(async (req, res) => {
   const userID = req.user?.details?._id;
-  const isRead = req.query.isRead ? JSON.parse(req.query.isRead) : false;
+  const isRead = req.query.isRead ? JSON.parse(req.query.isRead) : null;
   console.log({ isRead });
 
   const notifications = await Notifications.find({
     user: userID,
-    isRead,
-  }).lean();
+    ...(isRead !== null ? { isRead } : {}),
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
   return sendRes(
     res,
     200,
     { notifications },
-    `All ${isRead ? "" : "unread"} notifications found`
+    `All ${
+      isRead === null ? "" : isRead ? "read" : "unread"
+    } notifications found`
   );
+});
+
+const markNotificationsAsRead = asyncHandler(async (req, res) => {
+  const userID = req.user?.details?._id;
+  console.log("Will mark notifications as read");
+
+  await Notifications.updateMany(
+    {
+      user: userID,
+      isRead: false,
+    },
+    { $set: { isRead: true } },
+    { new: true }
+  )
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return sendRes(res, 200, null, `Marked all notifications as read`);
 });
 
 module.exports = {
@@ -312,4 +334,5 @@ module.exports = {
   getUsersPlaylist,
   getUsersWatchHistory,
   getNotifications,
+  markNotificationsAsRead,
 };

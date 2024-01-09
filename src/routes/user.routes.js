@@ -7,6 +7,7 @@ const {
   getNotifications,
   getUsersPlaylist,
   getUsersWatchHistory,
+  markNotificationsAsRead,
 } = require("../controllers/user.controller");
 const { isAuthorized } = require("../middlewares/auth.middleware");
 
@@ -23,7 +24,7 @@ userRouter.get("/me/notify", (req, res) => {
   console.log({ socket });
 
   socket.emit("notify-user", {
-    msg: "Notificaiton! Check kar",
+    content: "Notificaiton! Check kar",
   });
 
   res.send("Notified check");
@@ -31,6 +32,7 @@ userRouter.get("/me/notify", (req, res) => {
 
 // Notifications
 userRouter.get("/me/notifications", getNotifications);
+userRouter.post("/me/notifications/markasread", markNotificationsAsRead);
 
 userRouter.post(
   "/me/customize",
