@@ -34,12 +34,12 @@ const createVideo = asyncHandler(async (req, res) => {
     },
   };
 
-  // Socket IO: Notify-User
-  socket.emit("notify-user", progress_notification);
-
   const progressNotification = await Notifications.create(
     progress_notification
   );
+
+  // Socket IO: Notify-User
+  socket.emit("notify-user", progress_notification);
 
   try {
     // Your code for the CreateVideo function goes here
@@ -97,10 +97,10 @@ const createVideo = asyncHandler(async (req, res) => {
       },
     };
 
+    await Notifications.create(success_notification);
+
     // Socket IO: Notify-User
     socket.emit("notify-user", success_notification);
-
-    await Notifications.create(success_notification);
 
     res.status(201).json({
       video: newVideo,
@@ -116,10 +116,11 @@ const createVideo = asyncHandler(async (req, res) => {
         video: { title, desc, failedAt: todayDate.toJSON() },
       },
     };
-    // Socket IO: Notify-User
-    socket.emit("notify-user", error_notification);
 
     await Notifications.create(error_notification);
+
+    // Socket IO: Notify-User
+    socket.emit("notify-user", error_notification);
 
     return res.status(400).json({ msg: "Couldn't upload video" });
   } finally {
