@@ -20,36 +20,9 @@ const MemoryStore = createMemoryStore(session);
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: ["http://localhost:5173", "https://watchify-server.onrender.com"],
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("A user connected");
-  app.set("socket", socket);
-
-  // Handle events or broadcast messages as needed
-  // For example, you can handle disconnect event, etc.
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-
-app.set("dataaa", { data: "dataaa" });
-
 const port = process.env.PORT || 8080;
 
 connectToDB();
-
-// console.log({
-//   maxAge: 24 * 60 * 60 * 1000 * 7, // 7 days in milliseconds
-//   path: "/",
-//   sameSite: process.env.IN_DEVELOPMENT !== "YES" ? "none" : "lax",
-//   secure: process.env.IN_DEVELOPMENT !== "YES",
-//   httpOnly: true,
-// });
 
 if (process.env.IN_DEVELOPMENT !== "YES") {
   app.set("trust proxy", 1); // trust first proxy
@@ -74,6 +47,23 @@ app.use(
     },
   })
 );
+
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "https://watchify-server.onrender.com"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+  app.set("socket", socket);
+
+  // Handle events or broadcast messages as needed
+  // For example, you can handle disconnect event, etc.
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
