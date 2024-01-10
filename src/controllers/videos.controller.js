@@ -131,6 +131,7 @@ const createVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const videoID = req.params.id;
   const userID = req.user?.details?._id;
+  const socket = req.app.get("socket");
 
   const video = await Videos.aggregate([
     {
@@ -221,6 +222,28 @@ const getVideoById = asyncHandler(async (req, res) => {
     },
   ]);
 
+  if (!video[0]?.isPublic && video[0]?.creator?._id?.toString() !== userID) {
+    console.log("SENDING SOCKET MESSAGE");
+    socket.emit("notify-user", {
+      user: userID,
+      content: "This is a private video. Only the user can access it",
+      severity: "error",
+      notificationType: notificationTypes.contentFetch.unauthorized(),
+    });
+    console.log("SENT SOCKET");
+
+    return sendRes(
+      res,
+      403,
+      {
+        error: {
+          isPrivateVideo: true,
+        },
+      },
+      "This is a private video"
+    );
+  }
+
   let isAlreadyWatched;
   if (userID) {
     isAlreadyWatched = await WatchHistory.findOne({
@@ -235,88 +258,6 @@ const getVideoById = asyncHandler(async (req, res) => {
     ).lean();
     console.log({ historyResponse });
   }
-  // const video = await Videos.aggregate([
-  //   {
-  //     $lookup: {
-  //       from: "likes",
-  //       localField: "_id",
-  //       foreignField: "video",
-  //       as: "likes",
-  //     },
-  //   },
-  //   {
-  //     $lookup: {
-  //       from: "users",
-  //       localField: "creator",
-  //       foreignField: "_id",
-  //       as: "creator",
-  //     },
-  //   },
-  //   {
-  //     $lookup: {
-  //       from: "watch-histories",
-  //       localField: "videoID",
-  //       foreignField: "video",
-  //       as: "views",
-  //     },
-  //   },
-  //   {
-  //     $addFields: {
-  //       likes_count: { $size: "$likes" },
-  //       isLiked: {
-  //         $cond: {
-  //           if: {
-  //             $in: [new ObjectId(userID), "$likes.likedBy"],
-  //           },
-  //           then: true,
-  //           else: false,
-  //         },
-  //       },
-  //       creator: {
-  //         $first: "$creator",
-  //       },
-
-  //       views_count: { $size: "$views" },
-  //       isViewed: {
-  //         $cond: {
-  //           if: {
-  //             $in: [new ObjectId(userID), "$views.viewer"],
-  //           },
-  //           then: true,
-  //           else: false,
-  //         },
-  //       },
-  //       lastWatched: {
-  //         $let: {
-  //           vars: {
-  //             matchedView: {
-  //               $arrayElemAt: [
-  //                 {
-  //                   $filter: {
-  //                     input: "$views",
-  //                     as: "view",
-  //                     cond: {
-  //                       $eq: ["$$view.viewer", new ObjectId(userID)],
-  //                     },
-  //                   },
-  //                 },
-  //                 0,
-  //               ],
-  //             },
-  //           },
-  //           in: "$$matchedView.lastWatched",
-  //         },
-  //       },
-  //     },
-  //   },
-  //   {
-  //     $match: {
-  //       // _id: new ObjectId("658d6fd765b6e96cfd215d55"),
-  //       videoID,
-  //     },
-  //   },
-  // ]);
-
   res.status(200).json({
     video: {
       ...video[0],
@@ -414,6 +355,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
             in: "$$matchedView.lastWatched",
           },
         },
+      },
+    },
+    {
+      $match: {
+        isPublic: true,
       },
     },
   ]).sort({ createdAt: -1 });
