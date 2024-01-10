@@ -18,10 +18,14 @@ const login = asyncHandler(async (req, res) => {
 
     // 2. if email already exists in the DB. Return it & it's done
     if (userByEmail) {
-      if (
-        !userByEmail.watch_later_playlist_id ||
-        !userByEmail.liked_videos_playlist_id
-      )
+      const defaultPlaylists = await Playlists.find({
+        isDefault: true,
+        owner: userByEmail?._id,
+      });
+
+      console.log(defaultPlaylists);
+
+      if (defaultPlaylists?.length === 0)
         // Create Default Playlists
         await createDefaultPlaylists(userByEmail._id);
 
