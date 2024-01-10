@@ -163,8 +163,15 @@ const getVideosByUser = asyncHandler(async (req, res) => {
     },
   ]).sort({ createdAt: -1 });
 
+  let filteredVideos = videos;
+
+  if (userID !== channelID) {
+    // Send only the Public Vidoes of the channel if the user that is requesting is not the channel owner
+    filteredVideos = videos.filter((vid) => vid?.isPublic);
+  }
+
   res.status(200).json({
-    videos,
+    videos: filteredVideos,
   });
 });
 
