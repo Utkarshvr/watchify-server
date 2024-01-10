@@ -27,16 +27,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    watch_later_playlist_id: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    liked_videos_playlist_id: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     email: {
       type: String,
       required: true,

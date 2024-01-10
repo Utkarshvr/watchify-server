@@ -21,15 +21,9 @@ const login = asyncHandler(async (req, res) => {
       if (
         !userByEmail.watch_later_playlist_id ||
         !userByEmail.liked_videos_playlist_id
-      ) {
-        const { watchLater, likedVideos } = await createDefaultPlaylists(
-          userByEmail._id
-        );
-        userByEmail.watch_later_playlist_id = watchLater?._id;
-        userByEmail.liked_videos_playlist_id = likedVideos?._id;
-      }
-
-      userByEmail.save();
+      )
+        // Create Default Playlists
+        await createDefaultPlaylists(userByEmail._id);
 
       req.user.details = userByEmail;
 
@@ -82,10 +76,6 @@ const login = asyncHandler(async (req, res) => {
 
     // (c) Create a new user
 
-    const { watchLater, likedVideos } = await createDefaultPlaylists(
-      newUser?._id
-    );
-
     const userObj = {
       email,
       given_name,
@@ -95,14 +85,15 @@ const login = asyncHandler(async (req, res) => {
       user_handle: userHandle,
       channelID,
       desc: "",
-      watch_later_playlist_id: watchLater?._id,
-      liked_videos_playlist_id: likedVideos?._id,
     };
     // console.log(userObj);
 
     let newUser = await User.create(userObj);
 
     req.user.details = newUser;
+
+    // Create Default Playlists
+    await createDefaultPlaylists(newUser?._id);
 
     return res.status(201).json({
       error: false,
