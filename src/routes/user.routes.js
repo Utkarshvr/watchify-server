@@ -8,6 +8,7 @@ const {
   getUsersPlaylist,
   getUsersWatchHistory,
   markNotificationsAsRead,
+  getUsersSubscription,
 } = require("../controllers/user.controller");
 const { isAuthorized } = require("../middlewares/auth.middleware");
 
@@ -19,6 +20,9 @@ userRouter.use(isAuthorized);
 userRouter.get("/me", getUserById);
 userRouter.get("/me/playlists", getUsersPlaylist);
 userRouter.get("/me/watch-history", getUsersWatchHistory);
+userRouter.get("/me/subscriptions", getUsersSubscription);
+
+// ROUGH
 userRouter.get("/me/notify", (req, res) => {
   const socket = req.app.get("socket");
   console.log({ socket });

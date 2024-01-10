@@ -7,6 +7,7 @@ const { Types } = require("mongoose");
 const WatchHistory = require("../models/WatchHistory");
 const Notifications = require("../models/Notifications");
 const sendRes = require("../utils/sendRes");
+const Subscribers = require("../models/Subscribers");
 
 const customizeUser = asyncHandler(async (req, res) => {
   const { name, desc, user_handle, links } = req.body;
@@ -334,6 +335,21 @@ const markNotificationsAsRead = asyncHandler(async (req, res) => {
   return sendRes(res, 200, null, `Marked all notifications as read`);
 });
 
+const getUsersSubscription = asyncHandler(async (req, res) => {
+  try {
+    const userID = req.user?.details?._id;
+
+    const subscriptions = await Subscribers.find({
+      subscriber: userID,
+    }).populate("channel");
+
+    return sendRes(res, 200, { subscriptions }, "Subscriptions");
+  } catch (error) {
+    console.log(error);
+    return sendRes(res, 500, error, "Subscriptions not fetched");
+  }
+});
+
 module.exports = {
   customizeUser,
   getUserById,
@@ -342,4 +358,5 @@ module.exports = {
   getUsersWatchHistory,
   getNotifications,
   markNotificationsAsRead,
+  getUsersSubscription,
 };
